@@ -34,15 +34,23 @@ async function loadGithubMarkdownCss() {
 /**
  * Additional CSS for container layout and responsiveness.
  * Matches GitHub's README rendering layout.
+ * Forces light mode to prevent dark mode from system preferences.
  */
 const CONTAINER_CSS = `
+:root {
+  color-scheme: light;
+}
+
+/* Force light mode - override any dark mode styles */
 body {
   box-sizing: border-box;
   min-width: 200px;
   max-width: 980px;
   margin: 0 auto;
   padding: 45px;
-  background-color: #ffffff;
+  background-color: #ffffff !important;
+  color: #24292f !important;
+  color-scheme: light;
 }
 
 @media (max-width: 767px) {
@@ -53,6 +61,18 @@ body {
 
 .markdown-body {
   box-sizing: border-box;
+  color-scheme: light;
+  background-color: #ffffff !important;
+  color: #24292f !important;
+}
+
+/* Override dark mode media query */
+@media (prefers-color-scheme: dark) {
+  body,
+  .markdown-body {
+    background-color: #ffffff !important;
+    color: #24292f !important;
+  }
 }
 `.trim();
 
@@ -104,6 +124,7 @@ export async function generateHtml(renderedContent, options = {}) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
   <title>${escapeHtml(filename)}</title>
 
   <!-- GitHub Markdown CSS (inlined) -->
