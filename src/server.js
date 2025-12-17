@@ -66,6 +66,9 @@ export async function createServer(filePath, options = {}) {
   // Set of SSE client connections (only used if watch is enabled)
   const sseClients = new Set();
 
+  // Track all active sockets for forceful shutdown
+  const sockets = new Set();
+
   // File watcher (only created if watch is enabled)
   let fileWatcher = null;
 
@@ -196,6 +199,14 @@ export async function createServer(filePath, options = {}) {
   // Create HTTP server
   const server = http.createServer(requestHandler);
 
+  // Track all connections for forceful shutdown
+  server.on('connection', (socket) => {
+    sockets.add(socket);
+    socket.on('close', () => {
+      sockets.delete(socket);
+    });
+  });
+
   // Start listening
   await new Promise((resolve, reject) => {
     server.listen(port, (error) => {
@@ -232,6 +243,12 @@ export async function createServer(filePath, options = {}) {
       client.end();
     }
     sseClients.clear();
+
+    // Destroy all active sockets to force immediate shutdown
+    for (const socket of sockets) {
+      socket.destroy();
+    }
+    sockets.clear();
 
     // Close HTTP server
     return new Promise((resolve, reject) => {
